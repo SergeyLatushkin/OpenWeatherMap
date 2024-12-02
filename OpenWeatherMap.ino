@@ -95,7 +95,7 @@ void drawWind() {
   //drawing speed
   char bufferSpped[8];
   snprintf(bufferSpped, sizeof(bufferSpped), "%.1f", weather.windSpeed());
-  char* speedText = concatStrings("wind speed", bufferSpped);
+  char* speedText = concatStrings("wind speed ", bufferSpped);
 
   sprite.setTextColor(TFT_WHITE, background);
   sprite.drawString(speedText, centerX, 100);
