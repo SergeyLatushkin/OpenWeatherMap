@@ -164,10 +164,10 @@ class Weather {
       return str;
     }
 
-    float _windSpeed;
     float _temp;
     char* _description;
     float _feelsLike;
     char* _icon;
     bool _isDataUpdated;
+    float _windSpeed;
 };
