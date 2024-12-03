@@ -180,24 +180,17 @@ void drawWeather() {
   sprite.fillSprite(background);
 
   //drawing icon
-  if (currentWeather.icon != nullptr) {
-    size_t iconSize = 0;
-    uint8_t* iconData = weather.fetchWeatherIcon(currentWeather.icon, iconSize);
-
-    int16_t rc = png.openFLASH(iconData, iconSize, pngDraw);
-    if (rc == PNG_SUCCESS) {
-      Serial.println("Successfully opened png file");
-      //Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
-      sprite.startWrite();
-      rc = png.decode(NULL, 0);
-      sprite.endWrite();
-    }
-    else
-    {
-      Serial.println("Icon was not opened");
-    }
-
-    free(iconData);
+  int16_t rc = png.openFLASH(currentWeather.icon, currentWeather.iconSize, pngDraw);
+  if (rc == PNG_SUCCESS) {
+    Serial.println("Successfully opened png file");
+    //Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
+    sprite.startWrite();
+    rc = png.decode(NULL, 0);
+    sprite.endWrite();
+  }
+  else
+  {
+    Serial.println("Icon was not opened");
   }
 
   //drawing temp

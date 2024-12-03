@@ -2,8 +2,10 @@ struct CurrentWeather{
   float temp;
   char* description;
   float feelsLike;
-  char* icon;
+  char* iconCode;
   bool isDataUpdated;
+  uint8_t* icon;
+  size_t iconSize;
     
   float windSpeed;
   float deg;
@@ -13,9 +15,10 @@ struct CurrentWeather{
 class Weather {
   public:
     Weather(){ }
-    
+
     void updateData(CurrentWeather* data) {
       HTTPClient http;
+      char* code = nullptr;
 
       data->isDataUpdated = false;
 
@@ -43,17 +46,8 @@ class Weather {
             data->description = createString(description);
           }
 
-          const char* icon = doc["weather"][0]["icon"];
-          if (icon) {
-            if (data->icon) {
-              delete[] data->icon;
-            }
-            data->icon = createString(icon);
-          }
-
-          data->isDataUpdated = true;
-
-          Serial.println("CurrentWeather data is available");
+          const char* iconCode = doc["weather"][0]["icon"];
+          code = createString(iconCode);
         }
         else {
           Serial.print("JSON Deserialization Error: ");
@@ -68,24 +62,43 @@ class Weather {
       }
 
       http.end();
+
+      size_t size = 0;
+      uint8_t* icon = fetchWeatherIcon(code, size);
+
+      free(code);
+
+      if (icon) {
+        if (data->icon) {
+          delete[] data->icon;
+        }
+        data->icon = icon;
+        data->iconSize = size;
+      }
+
+      if(size == 0){
+        Serial.println("Current weather data is updated partaly");
+      }
+
+      data->isDataUpdated = true;
     }    
 
     uint8_t* fetchWeatherIcon(char* icon, size_t& size) {
       HTTPClient http;
-      uint8_t* buff = nullptr; // Указатель на буфер
-      size = 0;
+
+      uint8_t* buff = nullptr;
 
       char iconURL[100];
       snprintf(iconURL, sizeof(iconURL), "http://openweathermap.org/img/wn/%s@2x.png", icon);
+      Serial.println(iconURL);
 
       http.begin(iconURL);
       int httpCode = http.GET();
 
       if (httpCode == HTTP_CODE_OK) {
-        // Получаем размер данных
         int len = http.getSize();
         if (len <= 0) {
-            Serial.println("Ошибка: размер данных неизвестен или равен 0");
+            Serial.println("Error: Data size is unknown or 0");
             http.end();
 
             return nullptr;
@@ -94,35 +107,32 @@ class Weather {
         // Выделяем память под буфер
         buff = (uint8_t*)malloc(len);
         if (!buff) {
-            Serial.println("Ошибка: недостаточно памяти");
+            Serial.println("Error: Not enough memory");
             http.end();
 
             return nullptr;
         }
 
-        // Читаем данные из потока
         WiFiClient* stream = http.getStreamPtr();
         size_t totalBytesRead = 0;
 
         while (http.connected() && totalBytesRead < len) {
           size_t availableSize = stream->available();
           if (availableSize > 0) {
-            // Читаем доступные данные
+            // reading available data
             size_t bytesToRead = min(availableSize, len - totalBytesRead);
             size_t bytesRead = stream->readBytes(buff + totalBytesRead, bytesToRead);
             totalBytesRead += bytesRead;
 
-            // Проверяем, что данные полностью считаны
             if (bytesRead == 0){
                 break;
             }
           }
-          delay(1); // Небольшая задержка для освобождения ресурсов
+          delay(1); // small delay to free up resources
         }
 
-        // Проверяем, успешно ли считаны все данные
         if (totalBytesRead != len) {
-          Serial.println("Ошибка: данные считаны не полностью");
+          Serial.println("Error: Data not fully read");
           free(buff);
           buff = nullptr;
         }
@@ -132,7 +142,7 @@ class Weather {
       } else {
           Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
       }
-
+      
       http.end();
 
       return buff;
