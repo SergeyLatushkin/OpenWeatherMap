@@ -1,15 +1,23 @@
+struct CurrentWeather{
+  float temp;
+  char* description;
+  float feelsLike;
+  char* icon;
+  bool isDataUpdated;
+    
+  float windSpeed;
+  float deg;
+  float gust;
+};
+
 class Weather {
   public:
-    Weather()
-      : _temp(0.0), _feelsLike(0.0), _isDataUpdated(false), _windSpeed(0.0) {
-        _description = nullptr;
-        _icon = nullptr;
-    }
+    Weather(){ }
     
-    void updateData() {
+    void updateData(CurrentWeather* data) {
       HTTPClient http;
 
-      _isDataUpdated = false;
+      data->isDataUpdated = false;
 
       http.begin("http://api.openweathermap.org/data/2.5/weather?q=Warsaw&appid=c5a08acba9e958144a4a95e10c8016c0&units=metric&lang=en");
       int httpCode = http.GET();
@@ -21,26 +29,29 @@ class Weather {
         DeserializationError error = deserializeJson(doc, response);
 
         if (!error) {
-          _temp = doc["main"]["temp"].as<float>();
-          _feelsLike = doc["main"]["feels_like"].as<float>();
+          data->temp = doc["main"]["temp"].as<float>();
+          data->feelsLike = doc["main"]["feels_like"].as<float>();
+          data->windSpeed = doc["wind"]["speed"].as<float>();
+          data->deg = doc["wind"]["deg"].as<float>();
+          data->gust = doc["wind"]["gust"].as<float>();
 
           const char* description = doc["weather"][0]["description"];
           if (description) {
-            if (_description) {
-              delete[] _description;
+            if (data->description) {
+              delete[] data->description;
             }
-            _description = createString(description);
+            data->description = createString(description);
           }
 
-          if(!doc["weather"][0]["icon"].isNull()){
-            if (_icon) {
-              delete[] _icon;
+          const char* icon = doc["weather"][0]["icon"];
+          if (icon) {
+            if (data->icon) {
+              delete[] data->icon;
             }
-            _icon = createString(doc["weather"][0]["icon"]);
+            data->icon = createString(icon);
           }
 
-          _windSpeed = doc["wind"]["speed"].as<float>();
-          _isDataUpdated = true;
+          data->isDataUpdated = true;
 
           Serial.println("CurrentWeather data is available");
         }
@@ -48,24 +59,24 @@ class Weather {
           Serial.print("JSON Deserialization Error: ");
           Serial.println(error.c_str());
 
-          _isDataUpdated = false;
+          data->isDataUpdated = false;
         }    
       }
       else {
         Serial.println("Connection failed. fetchWeather()");
-        _isDataUpdated = false;
+        data->isDataUpdated = false;
       }
 
       http.end();
-    }
+    }    
 
-    uint8_t* fetchWeatherIcon(size_t& size) {
+    uint8_t* fetchWeatherIcon(char* icon, size_t& size) {
       HTTPClient http;
       uint8_t* buff = nullptr; // Указатель на буфер
       size = 0;
 
       char iconURL[100];
-      snprintf(iconURL, sizeof(iconURL), "http://openweathermap.org/img/wn/%s@2x.png", _icon);
+      snprintf(iconURL, sizeof(iconURL), "http://openweathermap.org/img/wn/%s@2x.png", icon);
 
       http.begin(iconURL);
       int httpCode = http.GET();
@@ -126,30 +137,6 @@ class Weather {
 
       return buff;
     }
-
-    bool isDataUpdated() const {
-        return _isDataUpdated;
-    }
-
-    float temp() const {
-        return _temp;
-    }
-
-    const char* description() const {
-        return _description;
-    }
-
-    float feelsLike() const {
-        return _feelsLike;
-    }
-
-    const char* icon() const {
-        return _icon;
-    }
-
-    float windSpeed() const {
-        return _windSpeed;
-    }
  
   private:
     char* createString(const char* input) {
@@ -163,11 +150,4 @@ class Weather {
 
       return str;
     }
-
-    float _temp;
-    char* _description;
-    float _feelsLike;
-    char* _icon;
-    bool _isDataUpdated;
-    float _windSpeed;
 };
