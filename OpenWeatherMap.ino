@@ -23,7 +23,7 @@ const char* ssid = "BRI-AZ-PF4DYB33 5770";
 const char* password = "Pz9527?6";
 
 PNG png;
-ENCODER encoder(41, 40);
+ENCODER encoder(41, 40, 0, 2);
 Weather weather;
 CurrentWeather currentWeather;
 
