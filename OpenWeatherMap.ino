@@ -48,6 +48,8 @@ void setup() {
   sprite.setTextDatum(4);
 
   connectWiFi();
+
+  weather.updateData(&currentWeather);
 }
 
 void loop() {
@@ -75,19 +77,19 @@ void loop() {
     oldPosition = newPosition;
   }
 
-  if(lastTime + updateWeatherTime >= millis() && lastTime != 0){
+  if (lastTime + updateWeatherTime >= millis() && lastTime != 0){
     return;
   }
 
   weather.updateData(&currentWeather);
 
-  if(!currentWeather.isDataUpdated){
+  if (!currentWeather.isDataUpdated){
     delay(1000);
 
     return;
   }
 
-  if (newPosition == oldPosition) {
+  if (newPosition == 0 && oldPosition == 0) {
     drawWeather();
   }
 
@@ -171,7 +173,7 @@ void drawSomethingElse() {
   //drawing
   sprite.setFreeFont(&FreeSerif12pt7b);
   sprite.setTextSize(1);
-  sprite.drawString("draw something else", centerX, 160);
+  sprite.drawString("draw something else", centerX, 120);
   
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
@@ -188,8 +190,7 @@ void drawWeather() {
     rc = png.decode(NULL, 0);
     sprite.endWrite();
   }
-  else
-  {
+  else {
     Serial.println("Icon was not opened");
   }
 

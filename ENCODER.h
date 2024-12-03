@@ -36,13 +36,13 @@ class ENCODER {
         _lastState = currentState;
 
         if (_stepCounter >= 4) {
-          if(_position < 2){
+          if (_position < 2){
             _position++;
           }
           _stepCounter = 0;
         }
         else if (_stepCounter <= -4) {
-          if(0 < _position){
+          if (0 < _position){
             _position--;
           }
           _stepCounter = 0;

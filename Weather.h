@@ -139,7 +139,8 @@ class Weather {
         else {
           size = totalBytesRead;
         }
-      } else {
+      }
+      else {
           Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
       }
       
