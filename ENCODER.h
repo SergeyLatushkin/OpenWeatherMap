@@ -17,7 +17,7 @@ class ENCODER {
 
       // Checking for state change (and debounce filtering)
       if (currentState != _lastState && (millis() - _lastDebounceTime) > _debounceDelay) {
-        _lastDebounceTime = millis();  // Сбрасываем время дребезга
+        _lastDebounceTime = millis();  // Resetting the bounce time
 
         // Determine the direction of rotation
         if ((_lastState == 0b00 && currentState == 0b01) ||

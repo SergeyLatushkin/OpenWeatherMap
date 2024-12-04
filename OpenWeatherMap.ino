@@ -22,6 +22,9 @@ TFT_eSprite sprite = TFT_eSprite(&tft);
 const char* ssid = "BRI-AZ-PF4DYB33 5770";
 const char* password = "Pz9527?6";
 
+float lat;
+float lon;
+
 PNG png;
 ENCODER encoder(41, 40, 0, 2);
 Weather weather;
@@ -49,7 +52,37 @@ void setup() {
 
   connectWiFi();
 
-  weather.updateData(&currentWeather);
+  getLocation();
+
+  weather.updateData(&currentWeather, lat, lon);
+}
+
+void getLocation() {
+  HTTPClient http;
+
+  http.begin("http://ip-api.com/json/");
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    String response = http.getString();
+
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, response);
+
+    if (!error) {
+      lat = doc["lat"].as<float>();
+      lon = doc["lon"].as<float>();
+    }
+    else {
+      Serial.print("JSON Deserialization Error: ");
+      Serial.println(error.c_str());
+    }
+  }
+  else {
+    Serial.println("Connection failed. getCoordinates()");
+  }
+
+  http.end();
 }
 
 void loop() {
@@ -57,8 +90,6 @@ void loop() {
 
   int8_t newPosition = encoder.getPosition();
   if (newPosition != oldPosition) {
-    Serial.printf("____encoder newPosition: %d , oldPosition: %d \n", newPosition, oldPosition);
-
     switch (newPosition) {
         case 0:
             drawWeather();
@@ -81,7 +112,7 @@ void loop() {
     return;
   }
 
-  weather.updateData(&currentWeather);
+  weather.updateData(&currentWeather, lat, lon);
 
   if (!currentWeather.isDataUpdated){
     delay(1000);
@@ -98,10 +129,13 @@ void loop() {
 
 void drawWind() {
   sprite.fillSprite(background);
+ 
+  sprite.setFreeFont(&FreeSerif12pt7b);
+  sprite.setTextSize(1);
 
   //drawing speed
-  char bufferSpeed[8];
-  snprintf(bufferSpeed, sizeof(bufferSpeed), "%.1f m/s", currentWeather.windSpeed);
+  char bufferSpeed[9];
+  snprintf(bufferSpeed, sizeof(bufferSpeed), "%.2f m/s", currentWeather.windSpeed);
   char* speedText = concatStrings("speed ", bufferSpeed);
 
   sprite.setTextColor(TFT_WHITE, background);
@@ -137,15 +171,12 @@ void drawWind() {
     sprite.fillCircle((int32_t)x, (int32_t)y, 3, TFT_WHITE);
   }
 
-  double angle = currentWeather.deg - 90 * M_PI / 180;
-  double x = centerX + radius * cos(angle);
-  double y = centerY + radius * sin(angle);
+  float angleRadians = (currentWeather.deg - 90) * M_PI / 180; // -90 shift
+  int x = centerX + (int)(radius * cos(angleRadians));
+  int y = centerY + (int)(radius * sin(angleRadians));
 
   sprite.drawCircle((int32_t)x, (int32_t)y, 3, TFT_RED);
   sprite.fillCircle((int32_t)x, (int32_t)y, 3, TFT_RED);
-
-  //float angle_radians = currentWeather.deg - 90 * M_PI / 180;
-  //drawThickLine(120, 120, 50, angle_radians, 4, TFT_RED);
 
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
@@ -170,11 +201,29 @@ void drawWind() {
 void drawSomethingElse() {
   sprite.fillSprite(background);
 
-  //drawing
   sprite.setFreeFont(&FreeSerif12pt7b);
   sprite.setTextSize(1);
-  sprite.drawString("draw something else", centerX, 120);
-  
+
+  //drawing pressure
+  char bufferPressure[12];
+  snprintf(bufferPressure, sizeof(bufferPressure), "%d hPa", currentWeather.pressure);
+  char* pressureText = concatStrings("pressure ", bufferPressure); 
+
+  sprite.setTextColor(TFT_WHITE, background);
+  sprite.drawString(pressureText, centerX, 100);
+
+  free(pressureText);
+
+  //drawing humidity
+  char bufferHumidity[8];
+  snprintf(bufferHumidity, sizeof(bufferHumidity), "%d%%", currentWeather.humidity);
+  char* humidityText = concatStrings("humidity ", bufferHumidity); 
+
+  sprite.setTextColor(TFT_WHITE, background);
+  sprite.drawString(humidityText, centerX, 130);
+
+  free(humidityText);
+
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
 
@@ -184,7 +233,6 @@ void drawWeather() {
   //drawing icon
   int16_t rc = png.openFLASH(currentWeather.icon, currentWeather.iconSize, pngDraw);
   if (rc == PNG_SUCCESS) {
-    Serial.println("Successfully opened png file");
     //Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
     sprite.startWrite();
     rc = png.decode(NULL, 0);
@@ -204,7 +252,9 @@ void drawWeather() {
 
   int textLengthInPixels = sprite.textWidth(temp);
 
-  sprite.drawCircle(centerX + 10 + textLengthInPixels / 2, 100, 3, TFT_WHITE);
+  for (int i = 0; i < 2; i++) {
+    sprite.drawCircle(centerX + 10 + textLengthInPixels / 2, 100, 4 - i, TFT_WHITE);
+  }
 
   sprite.drawString(temp, centerX, 110);
   sprite.unloadFont();
@@ -218,6 +268,9 @@ void drawWeather() {
   char bufferFeelsLike[8];
   snprintf(bufferFeelsLike, sizeof(bufferFeelsLike), "%.1f", currentWeather.feelsLike);
   char* feelsLikeText = concatStrings("feels like ", bufferFeelsLike);
+
+  int flLengthPixels = sprite.textWidth(feelsLikeText);
+  sprite.drawCircle(centerX + 5 + flLengthPixels / 2, 185, 2, TFT_WHITE);
 
   sprite.setTextColor(TFT_WHITE, background);
   sprite.drawString(feelsLikeText, centerX, 190);

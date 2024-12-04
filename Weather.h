@@ -1,5 +1,7 @@
 struct CurrentWeather{
   float temp;
+  short pressure;
+  short humidity;
   char* description;
   float feelsLike;
   char* iconCode;
@@ -16,13 +18,16 @@ class Weather {
   public:
     Weather(){ }
 
-    void updateData(CurrentWeather* data) {
+    void updateData(CurrentWeather* data, float lat, float lon) {
       HTTPClient http;
       char* code = nullptr;
 
       data->isDataUpdated = false;
 
-      http.begin("http://api.openweathermap.org/data/2.5/weather?q=Warsaw&appid=c5a08acba9e958144a4a95e10c8016c0&units=metric&lang=en");
+      char url[140];
+      snprintf(url, sizeof(url), "http://api.openweathermap.org/data/2.5/weather?lat=%.5f&lon=%.5f&appid=c5a08acba9e958144a4a95e10c8016c0&units=metric&lang=en", lat, lon);
+
+      http.begin(url);
       int httpCode = http.GET();
 
       if (httpCode == HTTP_CODE_OK) {
@@ -33,6 +38,8 @@ class Weather {
 
         if (!error) {
           data->temp = doc["main"]["temp"].as<float>();
+          data->pressure = doc["main"]["pressure"].as<short>();
+          data->humidity = doc["main"]["humidity"].as<short>();
           data->feelsLike = doc["main"]["feels_like"].as<float>();
           data->windSpeed = doc["wind"]["speed"].as<float>();
           data->deg = doc["wind"]["deg"].as<float>();
@@ -54,7 +61,7 @@ class Weather {
           Serial.println(error.c_str());
 
           data->isDataUpdated = false;
-        }    
+        }
       }
       else {
         Serial.println("Connection failed. fetchWeather()");
@@ -90,7 +97,6 @@ class Weather {
 
       char iconURL[100];
       snprintf(iconURL, sizeof(iconURL), "http://openweathermap.org/img/wn/%s@2x.png", icon);
-      Serial.println(iconURL);
 
       http.begin(iconURL);
       int httpCode = http.GET();
