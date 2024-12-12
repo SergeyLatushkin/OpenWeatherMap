@@ -127,6 +127,60 @@ void loop() {
   lastTime= millis();
 }
 
+void drawWeather() {
+  sprite.fillSprite(background);
+
+  //drawing icon
+  int16_t rc = png.openFLASH(currentWeather.icon, currentWeather.iconSize, pngDraw);
+  if (rc == PNG_SUCCESS) {
+    //Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
+    sprite.startWrite();
+    rc = png.decode(NULL, 0);
+    sprite.endWrite();
+  }
+  else {
+    Serial.println("Icon was not opened");
+  }
+
+  //drawing temp
+  char temp[8];
+  snprintf(temp, sizeof(temp), "%.1f", currentWeather.temp);
+
+  sprite.setFreeFont(&FreeSerif24pt7b);
+  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextSize(1.5);
+
+  int textLengthInPixels = sprite.textWidth(temp);
+
+  for (int i = 0; i < 2; i++) {
+    sprite.drawCircle(centerX + 10 + textLengthInPixels / 2, 100, 4 - i, TFT_WHITE);
+  }
+
+  sprite.drawString(temp, centerX, 110);
+  sprite.unloadFont();
+
+  //drawing description
+  sprite.setFreeFont(&FreeSerif12pt7b);
+  sprite.setTextSize(1);
+  sprite.drawString(currentWeather.description, centerX, 160);
+
+  //drawing feels like
+  char bufferFeelsLike[8];
+  snprintf(bufferFeelsLike, sizeof(bufferFeelsLike), "%.1f", currentWeather.feelsLike);
+  char* feelsLikeText = concatStrings("feels like ", bufferFeelsLike);
+
+  int flLengthPixels = sprite.textWidth(feelsLikeText);
+  sprite.drawCircle(centerX + 5 + flLengthPixels / 2, 185, 2, TFT_WHITE);
+
+  sprite.setTextColor(TFT_WHITE, background);
+  sprite.drawString(feelsLikeText, centerX, 190);
+  sprite.unloadFont();
+
+  free(feelsLikeText);
+  
+  tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
+}
+
 void drawWind() {
   sprite.fillSprite(background);
  
@@ -181,23 +235,6 @@ void drawWind() {
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
 
-/*void drawThickLine(int32_t x1, int32_t y1, int32_t length, float angle_radians, int thickness, uint32_t color) {
-    // Смещение для "жирности"
-    float dx = sin(angle_radians); // Смещение по X для каждой толщины
-    float dy = cos(angle_radians); // Смещение по Y для каждой толщины
-
-    for (int i = -thickness / 2; i <= thickness / 2; i++) {
-        // Начало и конец смещенной линии
-        int32_t x_start = x1 + i * dy;
-        int32_t y_start = y1 - i * dx;
-        int32_t x_end = x_start + length * cos(angle_radians);
-        int32_t y_end = y_start + length * sin(angle_radians);
-
-        // Рисуем одну линию
-        sprite.drawLine(x_start, y_start, x_end, y_end, color);
-    }
-}*/
-
 void drawSomethingElse() {
   sprite.fillSprite(background);
 
@@ -224,60 +261,6 @@ void drawSomethingElse() {
 
   free(humidityText);
 
-  tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
-}
-
-void drawWeather() {
-  sprite.fillSprite(background);
-
-  //drawing icon
-  int16_t rc = png.openFLASH(currentWeather.icon, currentWeather.iconSize, pngDraw);
-  if (rc == PNG_SUCCESS) {
-    //Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
-    sprite.startWrite();
-    rc = png.decode(NULL, 0);
-    sprite.endWrite();
-  }
-  else {
-    Serial.println("Icon was not opened");
-  }
-
-  //drawing temp
-  char temp[8];
-  snprintf(temp, sizeof(temp), "%.1f", currentWeather.temp);
-
-  sprite.setFreeFont(&FreeSerif24pt7b);
-  sprite.setTextColor(TFT_WHITE, background);
-  sprite.setTextSize(1.5);
-
-  int textLengthInPixels = sprite.textWidth(temp);
-
-  for (int i = 0; i < 2; i++) {
-    sprite.drawCircle(centerX + 10 + textLengthInPixels / 2, 100, 4 - i, TFT_WHITE);
-  }
-
-  sprite.drawString(temp, centerX, 110);
-  sprite.unloadFont();
-
-  //drawing description
-  sprite.setFreeFont(&FreeSerif12pt7b);
-  sprite.setTextSize(1);
-  sprite.drawString(currentWeather.description, centerX, 160);
-
-  //drawing feels like
-  char bufferFeelsLike[8];
-  snprintf(bufferFeelsLike, sizeof(bufferFeelsLike), "%.1f", currentWeather.feelsLike);
-  char* feelsLikeText = concatStrings("feels like ", bufferFeelsLike);
-
-  int flLengthPixels = sprite.textWidth(feelsLikeText);
-  sprite.drawCircle(centerX + 5 + flLengthPixels / 2, 185, 2, TFT_WHITE);
-
-  sprite.setTextColor(TFT_WHITE, background);
-  sprite.drawString(feelsLikeText, centerX, 190);
-  sprite.unloadFont();
-
-  free(feelsLikeText);
-  
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
 
