@@ -40,13 +40,22 @@ const int centerX = 120;
 void connectWiFi();
 void displayPNG(uint8_t* pngData, size_t size);
 
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50; // Задержка для фильтрации дребезга
+int lastButtonState = HIGH; // Предыдущее состояние кнопки
+int buttonState; // Текущее состояние кнопки
+
 void setup() {
   Serial.begin(115200);
 
+  //button
+  pinMode(42, INPUT_PULLUP);
+
+  // encoder
   encoder.begin();
+
   tft.init();  
   tft.fillScreen(background);
-  
   sprite.createSprite(240,240);
   sprite.setTextDatum(4);
 
@@ -57,35 +66,30 @@ void setup() {
   weather.updateData(&currentWeather, lat, lon);
 }
 
-void getLocation() {
-  HTTPClient http;
-
-  http.begin("http://ip-api.com/json/");
-  int httpCode = http.GET();
-
-  if (httpCode == HTTP_CODE_OK) {
-    String response = http.getString();
-
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, response);
-
-    if (!error) {
-      lat = doc["lat"].as<float>();
-      lon = doc["lon"].as<float>();
-    }
-    else {
-      Serial.print("JSON Deserialization Error: ");
-      Serial.println(error.c_str());
-    }
-  }
-  else {
-    Serial.println("Connection failed. getCoordinates()");
-  }
-
-  http.end();
-}
-
 void loop() {
+  
+  int reading = digitalRead(42);
+
+    // Проверяем, изменилось ли состояние кнопки
+    if (reading != lastButtonState) {
+        lastDebounceTime = millis(); // Обновляем время
+    }
+
+    // Если прошло достаточно времени и состояние изменилось
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+      if (reading != buttonState) {
+        buttonState = reading;
+
+        // Только если состояние кнопки изменилось, выводим в Serial
+        if (buttonState == LOW) {
+            Serial.println("Button pressed");
+        }
+      }
+    }
+
+  lastButtonState = reading;
+
+
   encoder.update();
 
   int8_t newPosition = encoder.getPosition();
@@ -125,6 +129,34 @@ void loop() {
   }
 
   lastTime= millis();
+}
+
+void getLocation() {
+  HTTPClient http;
+
+  http.begin("http://ip-api.com/json/");
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    String response = http.getString();
+
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, response);
+
+    if (!error) {
+      lat = doc["lat"].as<float>();
+      lon = doc["lon"].as<float>();
+    }
+    else {
+      Serial.print("JSON Deserialization Error: ");
+      Serial.println(error.c_str());
+    }
+  }
+  else {
+    Serial.println("Connection failed. getCoordinates()");
+  }
+
+  http.end();
 }
 
 void drawWeather() {
