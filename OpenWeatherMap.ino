@@ -16,7 +16,6 @@
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
 
-#define background TFT_SKYBLUE
 #define fontColor TFT_WHITE
 #define MAX_IMAGE_WIDTH 240
 
@@ -35,6 +34,7 @@ long lastTime = 0;
 const int updateWeatherTime = 60000;
 const int centerY = 120;
 const int centerX = 120;
+uint16_t background;
 
 void setup() {
   Serial.begin(115200);
@@ -42,10 +42,13 @@ void setup() {
   button.begin();
   encoder.begin();
 
-  tft.init();  
-  tft.fillScreen(background);
-  sprite.createSprite(240,240);
-  sprite.setTextDatum(4);
+  tft.init();
+  tft.setTextDatum(MC_DATUM);
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawString("loading...", centerX, centerY);
+  sprite.createSprite(240, 240);
+  sprite.setTextDatum(MC_DATUM);
 
   connectWiFi();
 
@@ -58,6 +61,7 @@ void loop() {
   button.isPressed();
 
   encoder.update();
+  dayMode();
 
   int8_t newPosition = encoder.getPosition();
   if (newPosition != oldPosition) {
@@ -93,6 +97,15 @@ void loop() {
   }
 
   lastTime= millis();
+}
+
+void dayMode(){
+  if (millis() > currentWeather.sunrise && millis() < currentWeather.sunset) {
+    background = TFT_SKYBLUE;
+  }
+  else{
+    background = TFT_DARKGREY;
+  }
 }
 
 void drawWeather() {
