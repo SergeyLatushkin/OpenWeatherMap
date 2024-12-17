@@ -17,6 +17,7 @@ TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
 
 #define background TFT_SKYBLUE
+#define fontColor TFT_WHITE
 #define MAX_IMAGE_WIDTH 240
 
 // Wi-Fi settings
@@ -25,7 +26,7 @@ const char* password = "Pz9527?6";
 
 PNG png;
 Encoder encoder(41, 40, 0, 2);
-Button button (42);
+Button button(42);
 Weather weather;
 CurrentWeather currentWeather;
 
@@ -34,10 +35,6 @@ long lastTime = 0;
 const int updateWeatherTime = 60000;
 const int centerY = 120;
 const int centerX = 120;
-
-// function prototypes
-void connectWiFi();
-void displayPNG(uint8_t* pngData, size_t size);
 
 void setup() {
   Serial.begin(115200);
@@ -121,13 +118,13 @@ void drawWeather() {
   snprintf(temp, sizeof(temp), "%.1f", currentWeather.temp);
 
   sprite.setFreeFont(&FreeSerif24pt7b);
-  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextColor(fontColor, background);
   sprite.setTextSize(1.5);
 
   int textLengthInPixels = sprite.textWidth(temp);
 
   for (int i = 0; i < 2; i++) {
-    sprite.drawCircle(centerX + 10 + textLengthInPixels / 2, 100, 4 - i, TFT_WHITE);
+    sprite.drawCircle(centerX + 10 + textLengthInPixels / 2, 100, 4 - i, fontColor);
   }
 
   sprite.drawString(temp, centerX, 110);
@@ -144,9 +141,9 @@ void drawWeather() {
   char* feelsLikeText = concatStrings("feels like ", bufferFeelsLike);
 
   int flLengthPixels = sprite.textWidth(feelsLikeText);
-  sprite.drawCircle(centerX + 5 + flLengthPixels / 2, 185, 2, TFT_WHITE);
+  sprite.drawCircle(centerX + 5 + flLengthPixels / 2, 185, 2, fontColor);
 
-  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextColor(fontColor, background);
   sprite.drawString(feelsLikeText, centerX, 190);
   sprite.unloadFont();
 
@@ -166,7 +163,7 @@ void drawWind() {
   snprintf(bufferSpeed, sizeof(bufferSpeed), "%.2f m/s", currentWeather.windSpeed);
   char* speedText = concatStrings("speed ", bufferSpeed);
 
-  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextColor(fontColor, background);
   sprite.drawString(speedText, centerX, 100);
   
   free(speedText);
@@ -176,7 +173,7 @@ void drawWind() {
   snprintf(bufferGust, sizeof(bufferGust), "%.1f m/s", currentWeather.gust);
   char* gustText = concatStrings("gusts ", bufferGust);
 
-  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextColor(fontColor, background);
   sprite.drawString(gustText, centerX, 130);
   
   free(gustText);
@@ -195,8 +192,8 @@ void drawWind() {
     double x = centerX + radius * cos(tableAngle);
     double y = centerY + radius * sin(tableAngle);
 
-    sprite.drawCircle((int32_t)x, (int32_t)y, 3, TFT_WHITE);
-    sprite.fillCircle((int32_t)x, (int32_t)y, 3, TFT_WHITE);
+    sprite.drawCircle((int32_t)x, (int32_t)y, 3, fontColor);
+    sprite.fillCircle((int32_t)x, (int32_t)y, 3, fontColor);
   }
 
   float angleRadians = (currentWeather.deg - 90) * M_PI / 180; // -90 shift
@@ -220,7 +217,7 @@ void drawSomethingElse() {
   snprintf(bufferPressure, sizeof(bufferPressure), "%d hPa", currentWeather.pressure);
   char* pressureText = concatStrings("pressure ", bufferPressure); 
 
-  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextColor(fontColor, background);
   sprite.drawString(pressureText, centerX, 100);
 
   free(pressureText);
@@ -230,7 +227,7 @@ void drawSomethingElse() {
   snprintf(bufferHumidity, sizeof(bufferHumidity), "%d%%", currentWeather.humidity);
   char* humidityText = concatStrings("humidity ", bufferHumidity); 
 
-  sprite.setTextColor(TFT_WHITE, background);
+  sprite.setTextColor(fontColor, background);
   sprite.drawString(humidityText, centerX, 130);
 
   free(humidityText);
