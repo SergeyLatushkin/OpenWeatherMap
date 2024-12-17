@@ -48,7 +48,7 @@ class Weather {
           const char* description = doc["weather"][0]["description"];
           if (description) {
             if (data->description) {
-              delete[] data->description;
+              delete[] data->description; // "light intensity shower rain"
             }
             data->description = createString(description);
           }

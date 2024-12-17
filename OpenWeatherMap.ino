@@ -7,6 +7,7 @@
 
 #include "ENCODER.h"
 #include "Weather.h"
+#include "Button.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +27,8 @@ float lat;
 float lon;
 
 PNG png;
-ENCODER encoder(41, 40, 0, 2);
+Encoder encoder(41, 40, 0, 2);
+Button button (42);
 Weather weather;
 CurrentWeather currentWeather;
 
@@ -40,18 +42,10 @@ const int centerX = 120;
 void connectWiFi();
 void displayPNG(uint8_t* pngData, size_t size);
 
-unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 50; // Задержка для фильтрации дребезга
-int lastButtonState = HIGH; // Предыдущее состояние кнопки
-int buttonState; // Текущее состояние кнопки
-
 void setup() {
   Serial.begin(115200);
 
-  //button
-  pinMode(42, INPUT_PULLUP);
-
-  // encoder
+  button.begin();
   encoder.begin();
 
   tft.init();  
@@ -68,27 +62,7 @@ void setup() {
 
 void loop() {
   
-  int reading = digitalRead(42);
-
-    // Проверяем, изменилось ли состояние кнопки
-    if (reading != lastButtonState) {
-        lastDebounceTime = millis(); // Обновляем время
-    }
-
-    // Если прошло достаточно времени и состояние изменилось
-    if ((millis() - lastDebounceTime) > debounceDelay) {
-      if (reading != buttonState) {
-        buttonState = reading;
-
-        // Только если состояние кнопки изменилось, выводим в Serial
-        if (buttonState == LOW) {
-            Serial.println("Button pressed");
-        }
-      }
-    }
-
-  lastButtonState = reading;
-
+  button.isPressed();
 
   encoder.update();
 

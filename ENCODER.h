@@ -1,6 +1,6 @@
-class ENCODER {
+class Encoder {
   public:
-    ENCODER(uint8_t pin1, uint8_t pin2, int8_t minPosition, int8_t maxPosition) 
+    Encoder(uint8_t pin1, uint8_t pin2, int8_t minPosition, int8_t maxPosition) 
       : _pin1(pin1), _pin2(pin2), _minPosition(minPosition), _maxPosition(maxPosition), _position(0), _stepCounter(0),
         _lastState(0), _lastDebounceTime(0), _debounceDelay(5) {}
 
