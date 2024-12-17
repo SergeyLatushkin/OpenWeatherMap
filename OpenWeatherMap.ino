@@ -23,9 +23,6 @@ TFT_eSprite sprite = TFT_eSprite(&tft);
 const char* ssid = "BRI-AZ-PF4DYB33 5770";
 const char* password = "Pz9527?6";
 
-float lat;
-float lon;
-
 PNG png;
 Encoder encoder(41, 40, 0, 2);
 Button button (42);
@@ -55,9 +52,8 @@ void setup() {
 
   connectWiFi();
 
-  getLocation();
-
-  weather.updateData(&currentWeather, lat, lon);
+  weather.getLocation();
+  weather.updateData(&currentWeather);
 }
 
 void loop() {
@@ -90,7 +86,7 @@ void loop() {
     return;
   }
 
-  weather.updateData(&currentWeather, lat, lon);
+  weather.updateData(&currentWeather);
 
   if (!currentWeather.isDataUpdated){
     delay(1000);
@@ -103,34 +99,6 @@ void loop() {
   }
 
   lastTime= millis();
-}
-
-void getLocation() {
-  HTTPClient http;
-
-  http.begin("http://ip-api.com/json/");
-  int httpCode = http.GET();
-
-  if (httpCode == HTTP_CODE_OK) {
-    String response = http.getString();
-
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, response);
-
-    if (!error) {
-      lat = doc["lat"].as<float>();
-      lon = doc["lon"].as<float>();
-    }
-    else {
-      Serial.print("JSON Deserialization Error: ");
-      Serial.println(error.c_str());
-    }
-  }
-  else {
-    Serial.println("Connection failed. getCoordinates()");
-  }
-
-  http.end();
 }
 
 void drawWeather() {

@@ -16,16 +16,17 @@ struct CurrentWeather{
 
 class Weather {
   public:
-    Weather(){ }
+    Weather()
+      : _lat(0), _lon(0) {}
 
-    void updateData(CurrentWeather* data, float lat, float lon) {
+    void updateData(CurrentWeather* data) {
       HTTPClient http;
       char* code = nullptr;
 
       data->isDataUpdated = false;
 
       char url[140];
-      snprintf(url, sizeof(url), "http://api.openweathermap.org/data/2.5/weather?lat=%.5f&lon=%.5f&appid=c5a08acba9e958144a4a95e10c8016c0&units=metric&lang=en", lat, lon);
+      snprintf(url, sizeof(url), "http://api.openweathermap.org/data/2.5/weather?lat=%.5f&lon=%.5f&appid=c5a08acba9e958144a4a95e10c8016c0&units=metric&lang=en", _lat, _lon);
 
       http.begin(url);
       int httpCode = http.GET();
@@ -153,9 +154,39 @@ class Weather {
       http.end();
 
       return buff;
+    }    
+
+    void getLocation() {
+      HTTPClient http;
+
+      http.begin("http://ip-api.com/json/");
+      int httpCode = http.GET();
+
+      if (httpCode == HTTP_CODE_OK) {
+        String response = http.getString();
+
+        JsonDocument doc;
+        DeserializationError error = deserializeJson(doc, response);
+
+        if (!error) {
+          _lat = doc["lat"].as<float>();
+          _lon = doc["lon"].as<float>();
+        }
+        else {
+          Serial.print("JSON Deserialization Error: ");
+          Serial.println(error.c_str());
+        }
+      }
+      else {
+        Serial.println("Connection failed. getCoordinates()");
+      }
+
+      http.end();
     }
  
   private:
+    float _lat;
+    float _lon;
     char* createString(const char* input) {
       size_t length = strlen(input);
       char* str = (char*)malloc(length + 1);
