@@ -130,7 +130,13 @@ void drawWeather() {
   //drawing description
   sprite.setFreeFont(&FreeSerif12pt7b);
   sprite.setTextSize(1);
-  sprite.drawString(currentWeather.description, centerX, 160);
+
+  if(sprite.textWidth(currentWeather.description) <= 200){
+    sprite.drawString(currentWeather.description, centerX, 160);
+  }
+  else{
+    sprite.drawString(trimTextToWidth(currentWeather.description), centerX, 160);
+  }
 
   //drawing feels like
   char bufferFeelsLike[8];
@@ -276,4 +282,22 @@ char* concatStrings(const char* str1, const char* str2) {
     strcat(result, str2);
 
     return result;
+}
+
+String trimTextToWidth(const char* text) {
+  String result = "";
+  int i = 0;
+
+  while (text[i] != '\0') {
+    result += text[i];
+
+    if (sprite.textWidth(result) >= 190) {
+      result += "...";
+      break;
+    }
+
+    i++;
+  }
+
+  return result;
 }
