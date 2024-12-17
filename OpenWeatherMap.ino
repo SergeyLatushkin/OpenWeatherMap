@@ -62,18 +62,15 @@ void loop() {
   int8_t newPosition = encoder.getPosition();
   if (newPosition != oldPosition) {
     switch (newPosition) {
-        case 0:
-            drawWeather();
-            break;
-        case 1:
-            drawWind();
-            break;
-        case 2:
-            drawSomethingElse();
-            break;
-        default:
-            printf("4\n");
-            break;
+      case 0:
+        drawWeather();
+        break;
+      case 1:
+        drawWind();
+        break;
+      case 2:
+        drawParams();
+        break;
     }
 
     oldPosition = newPosition;
@@ -206,7 +203,7 @@ void drawWind() {
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
 
-void drawSomethingElse() {
+void drawParams() {
   sprite.fillSprite(background);
 
   sprite.setFreeFont(&FreeSerif12pt7b);
