@@ -13,8 +13,9 @@ struct CurrentWeather{
   float deg;
   float gust;
 
-  short sunrise;
-  short sunset;
+  long sunrise;
+  long sunset;
+  long time;
 };
 
 class Weather {
@@ -49,8 +50,9 @@ class Weather {
           data->deg = doc["wind"]["deg"].as<float>();
           data->gust = doc["wind"]["gust"].as<float>();
 
-          data->sunrise = doc["sys"]["sunrise"].as<short>();
-          data->sunset = doc["sys"]["sunset"].as<short>();
+          data->sunrise = doc["sys"]["sunrise"].as<long>();
+          data->sunset = doc["sys"]["sunset"].as<long>();
+          data->time = doc["dt"].as<long>();
 
           const char* description = doc["weather"][0]["description"];
           if (description) {

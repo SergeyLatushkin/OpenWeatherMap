@@ -61,7 +61,6 @@ void loop() {
   button.isPressed();
 
   encoder.update();
-  dayMode();
 
   int8_t newPosition = encoder.getPosition();
   if (newPosition != oldPosition) {
@@ -100,15 +99,17 @@ void loop() {
 }
 
 void dayMode(){
-  if (millis() > currentWeather.sunrise && millis() < currentWeather.sunset) {
+  if (currentWeather.time > currentWeather.sunrise && currentWeather.time < currentWeather.sunset) {
     background = TFT_SKYBLUE;
   }
-  else{
+  else {
     background = TFT_DARKGREY;
   }
 }
 
-void drawWeather() {
+void drawWeather() {  
+  dayMode();
+
   sprite.fillSprite(background);
 
   //drawing icon
@@ -168,7 +169,9 @@ void drawWeather() {
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
 
-void drawWind() {
+void drawWind() {  
+  dayMode();
+
   sprite.fillSprite(background);
  
   sprite.setFreeFont(&FreeSerif12pt7b);
@@ -222,7 +225,9 @@ void drawWind() {
   tft.pushImage(0, 0, 240, 240, (uint16_t*)sprite.getPointer());
 }
 
-void drawParams() {
+void drawParams() {  
+  dayMode();
+
   sprite.fillSprite(background);
 
   sprite.setFreeFont(&FreeSerif12pt7b);
